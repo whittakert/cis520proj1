@@ -18,5 +18,3 @@ pintos/scr/threads --> where to make
 I was never able to edit the bashrc, so I finished the project in one terminal session. 
 tried to VI bashrc, but still no file/dir was found.
 
--Test edit by Ethan Koch
-
