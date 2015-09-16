@@ -7,7 +7,9 @@ CIS 520 - Programming Project #1
 >> Fill in the names and email addresses of your group members.
 
 FirstName LastName <email@k-state.edu>
+Ethan Koch
 FirstName LastName <email@k-state.edu>
+Doug Anjard
 Taylor Whittaker 	whittakert@ksu.ed
 
 ---- PRELIMINARIES ----
