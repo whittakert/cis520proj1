@@ -8,7 +8,7 @@ CIS 520 - Programming Project #1
 
 FirstName LastName <email@k-state.edu>
 FirstName LastName <email@k-state.edu>
-...
+Taylor Whittaker 	whittakert@ksu.ed
 
 ---- PRELIMINARIES ----
 
