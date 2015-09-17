@@ -347,7 +347,7 @@ thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
    struct thread *cur = thread_current ();
    cur -> priority = new_priority;
    while (cur no longer has highest priority)
-      cur.yield();
+      thread_yield(cur);
       */
   thread_current ()->priority = new_priority; // provided
 }
