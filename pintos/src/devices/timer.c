@@ -85,7 +85,11 @@ timer_elapsed (int64_t then)
 }
 
 /* Sleeps for approximately TICKS timer ticks.  Interrupts must
-   be turned on. */
+   be turned on. 
+   ToDo: - Remove thread from ready list and record time when it
+	 should be put back in ready list - in timer_sleep( )
+	 - Put it back after sufficient ticks have elapsed - in timer
+	 interrupt handler, timer_interrupt( ).  */
 void
 timer_sleep (int64_t ticks) 
 {
