@@ -20,6 +20,11 @@
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
 
+/* Number of timer ticks until timer should be waked from sleep. */
+static int64_t wake_ticks;
+
+static struct thread * sleepy_thread;
+
 /* Number of loops per timer tick.
    Initialized by timer_calibrate(). */
 static unsigned loops_per_tick;
@@ -37,6 +42,7 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+  wake_ticks = 0;
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -93,11 +99,22 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  enum intr_level old_level;
+
+  //sleepy_thread = list_entry (list_pop_front (&ready_list), struct thread, elem);
+
   int64_t start = timer_ticks ();
+  wake_ticks = start + ticks;
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+  old_level = intr_disable ();
+  printf("Blocking thread...");
+  sleepy_thread = thread_current();
+  thread_block();
+  intr_set_level (old_level);
+
+  //while (timer_elapsed (start) < ticks) 
+    //thread_yield ();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -154,7 +171,7 @@ timer_udelay (int64_t us)
    need not be turned on.
 
    Busy waiting wastes CPU cycles, and busy waiting with
-   interrupts off for the interval between timer ticks or longer
+   interrupts off for the interval between timer ticks or longerx
    will cause timer ticks to be lost.  Thus, use timer_nsleep()
    instead if interrupts are enabled.*/
 void
@@ -176,6 +193,16 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+  printf("%i,%i", timer_ticks(), wake_ticks);
+  if ( timer_ticks () >= wake_ticks && sleepy_thread )
+  {
+     printf("Unblocking thread...");
+     thread_unblock( sleepy_thread );
+  }
+
+  //if ( timer_ticks () >= wake_ticks )
+     //list_push_front ( &ready_list, sleepy_thread );
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
