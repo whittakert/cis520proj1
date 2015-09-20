@@ -254,8 +254,6 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  //TODO: cleanup
-  //list_push_back (&ready_list, &t->elem); //previous method of just pushing all threads to the back
   push_by_pri (&t->elem, t->priority);
 
   t->status = THREAD_READY;
@@ -329,8 +327,6 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread) 
   {
-//TODO: cleanup
-//    list_push_back (&ready_list, &cur->elem); //previous method of just pushing all threads to the back
     push_by_pri(&cur->elem, cur->priority);
   }
   cur->status = THREAD_READY;
@@ -359,19 +355,12 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
 {
-<<<<<<< HEAD
-//TODO: Cleanup
   thread_current ()->priority = new_priority;
 
   if(has_higher_pri(new_priority))
-{
+  {
     thread_yield();
-}
-else
-{
-printf("Did not yield\n");
-}//
->>>>>>> c06c203b09d0638e6747dc91d5019ed34c09558d
+  }
 }
 
 /* Returns the current thread's priority. */
@@ -645,9 +634,6 @@ push_by_pri(struct list_elem *elem, int pri)
 
     if(le != list_tail(&ready_list))
     {
-//TODO: cleanup
-      //list_insert (le, elem);
-      //return;
       break;
     }
   }
@@ -662,9 +648,6 @@ has_higher_pri(int pri)
   int i;
   bool val = false;
 
-//TODO: cleanup
-//printf("Started has higher pri for %d\n", pri);
-
   for(i = pri + 1; i <= PRI_MAX; i++)
   {
     if(find_pri(i) != list_tail(&ready_list))
@@ -672,11 +655,6 @@ has_higher_pri(int pri)
       val = true;
     }
   }
-
-/*if(val)
-printf("we are returning true..\n");
-else
-printf("we returned false..\n");*/
 
   return val;
 }
