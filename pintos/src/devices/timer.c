@@ -20,10 +20,11 @@
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
 
-/* Number of timer ticks until timer should be waked from sleep. */
-static int64_t wake_ticks;
+/* Pointer to a thread that is to be put to sleep. */
+static struct thread* sleepy_thread;
 
-static struct thread * sleepy_thread;
+/* List of sleeping threads. */
+static struct list sleeping_threads;
 
 /* Number of loops per timer tick.
    Initialized by timer_calibrate(). */
@@ -40,9 +41,10 @@ static void real_time_delay (int64_t num, int32_t denom);
 void
 timer_init (void) 
 {
+  /* Initialize list of sleeping threads */
+  list_init( &sleeping_threads );
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
-  wake_ticks = 0;
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -91,30 +93,23 @@ timer_elapsed (int64_t then)
 }
 
 /* Sleeps for approximately TICKS timer ticks.  Interrupts must
-   be turned on. 
-   ToDo: - Remove thread from ready list and record time when it
-	 should be put back in ready list - in timer_sleep( )
-	 - Put it back after sufficient ticks have elapsed - in timer
-	 interrupt handler, timer_interrupt( ).  */
+   be turned on. */
 void
 timer_sleep (int64_t ticks) 
 {
-  enum intr_level old_level;
-
-  //sleepy_thread = list_entry (list_pop_front (&ready_list), struct thread, elem);
-
-  int64_t start = timer_ticks ();
-  wake_ticks = start + ticks;
+  if ( ticks <= 0 ) return;
 
   ASSERT (intr_get_level () == INTR_ON);
+  enum intr_level old_level;
   old_level = intr_disable ();
-  printf("Blocking thread...");
-  sleepy_thread = thread_current();
-  thread_block();
-  intr_set_level (old_level);
 
-  //while (timer_elapsed (start) < ticks) 
-    //thread_yield ();
+  thread_current()->wake_time = timer_ticks() + ticks;
+  sleepy_thread = thread_current();
+  list_push_front( &sleeping_threads, &sleepy_thread->elem );
+
+  thread_block();
+
+  intr_set_level (old_level);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -194,15 +189,23 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  printf("%i,%i", timer_ticks(), wake_ticks);
-  if ( timer_ticks () >= wake_ticks && sleepy_thread )
-  {
-     printf("Unblocking thread...");
-     thread_unblock( sleepy_thread );
-  }
-
-  //if ( timer_ticks () >= wake_ticks )
-     //list_push_front ( &ready_list, sleepy_thread );
+  struct list_elem* temp;
+  temp = list_head ( &sleeping_threads );
+  while ( temp != list_end ( &sleeping_threads ) )
+    {
+      struct thread *st = list_entry(temp, struct thread, elem);
+      if ( ( st->wake_time != (int64_t)0 ) && ( timer_ticks () >= st->wake_time ) )
+      {
+         st->wake_time = (int64_t)0;
+         struct list_elem* temp2;
+         temp2 = temp;
+         temp = list_next ( temp );
+         list_remove( temp2 );
+         thread_unblock ( st );
+      }
+      else
+         temp = list_next ( temp ); 
+   }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
