@@ -690,7 +690,7 @@ need to make list of threads waiting for the lock -- lock_list in my psuedocode/
 			holder->priority = max_waiter -> priority;
 	}
 
-*/
+
 
 void donate(void)
 {
@@ -698,5 +698,5 @@ void donate(void)
 
 }
 
-
+*/
 
