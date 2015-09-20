@@ -357,8 +357,9 @@ thread_foreach (thread_action_func *func, void *aux)
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
-thread_set_priority (int new_priority) 
+thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
 {
+<<<<<<< HEAD
 //TODO: Cleanup
   thread_current ()->priority = new_priority;
 
@@ -370,6 +371,7 @@ else
 {
 printf("Did not yield\n");
 }//
+>>>>>>> c06c203b09d0638e6747dc91d5019ed34c09558d
 }
 
 /* Returns the current thread's priority. */

@@ -37,9 +37,6 @@ static struct thread *initial_thread;
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
-/* Lock used for list_ready */
-static struct lock ready_lock;
-
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
   {
@@ -96,7 +93,6 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
-  lock_init (&ready_lock);
   list_init (&ready_list);
   list_init (&all_list);
 
@@ -361,8 +357,9 @@ thread_foreach (thread_action_func *func, void *aux)
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
-thread_set_priority (int new_priority) 
+thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
 {
+<<<<<<< HEAD
 //TODO: Cleanup
   thread_current ()->priority = new_priority;
 
@@ -374,6 +371,9 @@ else
 {
 printf("Did not yield\n");
 }//
+=======
+
+>>>>>>> c06c203b09d0638e6747dc91d5019ed34c09558d
 }
 
 /* Returns the current thread's priority. */
