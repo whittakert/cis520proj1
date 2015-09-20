@@ -70,9 +70,12 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
 static struct list_elem *find_pri(int pri);
 static void push_by_pri(struct list_elem *elem, int pri);
 static bool has_higher_pri(int pri);
+static struct semaphore sema_thread;
+static struct list_elem *get_highest_pri();
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -95,6 +98,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  sema_init (&sema_thread, 0);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -254,8 +258,6 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  //TODO: cleanup
-  //list_push_back (&ready_list, &t->elem); //previous method of just pushing all threads to the back
   push_by_pri (&t->elem, t->priority);
 
   t->status = THREAD_READY;
@@ -329,8 +331,6 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread) 
   {
-//TODO: cleanup
-//    list_push_back (&ready_list, &cur->elem); //previous method of just pushing all threads to the back
     push_by_pri(&cur->elem, cur->priority);
   }
   cur->status = THREAD_READY;
@@ -517,7 +517,8 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    //return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    return list_entry (get_highest_pri(), struct thread, elem);
 }
 
 /* Completes a thread switch by activating the new thread's page
@@ -638,9 +639,6 @@ push_by_pri(struct list_elem *elem, int pri)
 
     if(le != list_tail(&ready_list))
     {
-//TODO: cleanup
-      //list_insert (le, elem);
-      //return;
       break;
     }
   }
@@ -655,9 +653,6 @@ has_higher_pri(int pri)
   int i;
   bool val = false;
 
-//TODO: cleanup
-//printf("Started has higher pri for %d\n", pri);
-
   for(i = pri + 1; i <= PRI_MAX; i++)
   {
     if(find_pri(i) != list_tail(&ready_list))
@@ -666,12 +661,27 @@ has_higher_pri(int pri)
     }
   }
 
-/*if(val)
-printf("we are returning true..\n");
-else
-printf("we returned false..\n");*/
-
   return val;
+}
+
+static struct list_elem *
+get_highest_pri()
+{
+  int pri = -1;
+  struct list_elem *e;
+  struct list_elem *return_Val = list_tail(&ready_list);
+
+      for (e = list_begin (&ready_list); e != list_end (&ready_list);
+           e = list_next (e))
+        {
+          struct thread *f = list_entry (e, struct thread, elem);
+          if(f->priority > pri)
+	  {
+	    return_Val = e;
+	  }
+        }
+
+  return list_remove(return_Val);
 }
 
 /* Offset of `stack' member within `struct thread'.

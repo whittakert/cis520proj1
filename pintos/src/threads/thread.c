@@ -70,9 +70,11 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
 static struct list_elem *find_pri(int pri);
 static void push_by_pri(struct list_elem *elem, int pri);
 static bool has_higher_pri(int pri);
+static struct semaphore sema_thread;
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -95,6 +97,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  sema_init (&sema_thread, 0);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
