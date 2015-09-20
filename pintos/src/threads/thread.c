@@ -644,6 +644,7 @@ push_by_pri(struct list_elem *elem, int pri)
   list_insert (le, elem);
 }
 
+
 /* Determines if there is a higher priority in ready_list. */
 static bool
 has_higher_pri(int pri)
@@ -665,3 +666,37 @@ has_higher_pri(int pri)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+/*Priority Donation.... 
+https://code.google.com/p/pintosof4p/source/browse/trunk/pintos/src/threads/thread.c?r=11
+
+Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure... 
+
+Find the max priority in the waiting list and donate it to the thread holding the lock
+need to make list of threads waiting for the lock -- lock_list in my psuedocode/
+
+1. sort list
+2. create list_elem *element
+3. for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
+           element = list_prev (e))
+	{
+		struck lock_elem *lock_element = add element to lock_elem;
+		create thread holder = lock_element->lock->holder;
+		if holder == null, break;
+		create max_element  = sort wait list back to front
+		create thread max_waiter, add to list
+		if max_waiter == null, break;
+		if holder->priority < max_waiter -> priority
+			holder->priority = max_waiter -> priority;
+	}
+
+
+
+void donate(void)
+{
+
+
+}
+
+*/
+

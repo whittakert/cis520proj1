@@ -75,7 +75,6 @@ static struct list_elem *find_pri(int pri);
 static void push_by_pri(struct list_elem *elem, int pri);
 static bool has_higher_pri(int pri);
 static struct semaphore sema_thread;
-static struct list_elem *get_highest_pri();
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -517,8 +516,7 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
-    //return list_entry (list_pop_front (&ready_list), struct thread, elem);
-    return list_entry (get_highest_pri(), struct thread, elem);
+    return list_entry (list_pop_front (&ready_list), struct thread, elem);
 }
 
 /* Completes a thread switch by activating the new thread's page
@@ -646,6 +644,7 @@ push_by_pri(struct list_elem *elem, int pri)
   list_insert (le, elem);
 }
 
+
 /* Determines if there is a higher priority in ready_list. */
 static bool
 has_higher_pri(int pri)
@@ -663,27 +662,41 @@ has_higher_pri(int pri)
 
   return val;
 }
-
-static struct list_elem *
-get_highest_pri()
-{
-  int pri = -1;
-  struct list_elem *e;
-  struct list_elem *return_Val = list_tail(&ready_list);
-
-      for (e = list_begin (&ready_list); e != list_end (&ready_list);
-           e = list_next (e))
-        {
-          struct thread *f = list_entry (e, struct thread, elem);
-          if(f->priority > pri)
-	  {
-	    return_Val = e;
-	  }
-        }
-
-  return list_remove(return_Val);
-}
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+/*Priority Donation.... 
+https://code.google.com/p/pintosof4p/source/browse/trunk/pintos/src/threads/thread.c?r=11
+
+Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure... 
+
+Find the max priority in the waiting list and donate it to the thread holding the lock
+need to make list of threads waiting for the lock -- lock_list in my psuedocode/
+
+1. sort list
+2. create list_elem *element
+3. for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
+           element = list_prev (e))
+	{
+		struck lock_elem *lock_element = add element to lock_elem;
+		create thread holder = lock_element->lock->holder;
+		if holder == null, break;
+		create max_element  = sort wait list back to front
+		create thread max_waiter, add to list
+		if max_waiter == null, break;
+		if holder->priority < max_waiter -> priority
+			holder->priority = max_waiter -> priority;
+	}
+
+*/
+
+void donate(void)
+{
+
+
+}
+
+
+
