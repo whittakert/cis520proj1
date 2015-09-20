@@ -670,7 +670,26 @@ uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 /*Priority Donation.... 
 https://code.google.com/p/pintosof4p/source/browse/trunk/pintos/src/threads/thread.c?r=11
 
-Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure... 
+Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure...
+
+bool need_donate(void)
+{
+	struct list_elem *element;
+	for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
+           element = list_prev (element))
+	{
+		struck lock_elem *lock_element = add element to lock_elem;
+		if lock_element ->lock->holder == null, continue;
+		if sema wait list == null, continue;
+		create max_element  = sort wait list back to front
+		create thread max_waiter, add to list
+		if max_waiter == null, break;
+		if holder->priority < max_waiter -> priority
+			return true;
+	}
+	return false;
+}
+
 
 Find the max priority in the waiting list and donate it to the thread holding the lock
 need to make list of threads waiting for the lock -- lock_list in my psuedocode/
@@ -678,7 +697,7 @@ need to make list of threads waiting for the lock -- lock_list in my psuedocode/
 1. sort list
 2. create list_elem *element
 3. for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
-           element = list_prev (e))
+           element = list_prev (element))
 	{
 		struck lock_elem *lock_element = add element to lock_elem;
 		create thread holder = lock_element->lock->holder;
