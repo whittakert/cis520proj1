@@ -74,6 +74,10 @@ static tid_t allocate_tid (void);
 static struct list_elem *find_pri(int pri);
 static void push_by_pri(struct list_elem *elem, int pri);
 static bool has_higher_pri(int pri);
+
+/* Compare function used to sort ready list by priority */
+static bool compare_priority(const struct list_elem*, const struct list_elem*, void*);
+
 static struct semaphore sema_thread;
 
 /* Initializes the threading system by transforming the code
@@ -257,7 +261,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  push_by_pri (&t->elem, t->priority);
+  //push_by_pri (&t->elem, t->priority);
+  list_insert_ordered( &ready_list, &t->elem, compare_priority, NULL );
 
   t->status = THREAD_READY;
   intr_set_level (old_level);
@@ -329,8 +334,9 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-  {
-    push_by_pri(&cur->elem, cur->priority);
+  {   
+    //push_by_pri(&cur->elem, cur->priority);
+    list_insert_ordered( &ready_list, &thread_current()->elem, compare_priority, NULL );
   }
   cur->status = THREAD_READY;
   schedule ();
@@ -356,15 +362,10 @@ thread_foreach (thread_action_func *func, void *aux)
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
-thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
+thread_set_priority (int new_priority)
 {
-  if(has_higher_pri(new_priority))
-  {
-    thread_current ()->priority = new_priority;
-    thread_yield();
-  }
-  else
-    thread_current ()->priority = new_priority;
+  thread_current ()->priority = new_priority;
+  thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -646,6 +647,13 @@ push_by_pri(struct list_elem *elem, int pri)
   list_insert (le, elem);
 }
 
+static bool
+compare_priority(const struct list_elem *lin, const struct list_elem *lhead, void *unused)
+{
+  struct thread *in = list_entry(lin, struct thread, elem);
+  struct thread *head = list_entry(lhead, struct thread, elem);
+  return ( in->priority > head->priority );
+}
 
 /* Determines if there is a higher priority in ready_list. */
 static bool
@@ -670,7 +678,6 @@ has_higher_pri(int pri)
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
 /*Priority Donation.... 
-https://code.google.com/p/pintosof4p/source/browse/trunk/pintos/src/threads/thread.c?r=11
 
 Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure...
 
