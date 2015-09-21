@@ -415,58 +415,7 @@ thread_get_recent_cpu (void)
    ready list.  It is returned by next_thread_to_run() as a
    special case when the ready list is empty. */
 static void
-idle (void *idle_started_ UNUSED) lock_release (struct lock *lock) 
-{
-  ASSERT (lock != NULL);
-  ASSERT (lock_held_by_current_thread (lock));
-  
-  /* L: We turn the intr off just like we do it in the acquire. */
-  enum intr_level old_level = intr_disable ();
-  /* L: If priority becomes low, there's possible need a thread_yield() */
-  bool yield = false;
-  
-  lock->holder = NULL;
-
-  /* L: We don't handle 'system' locks here (lid = -1) */
-  if(lock->lid != -1)
-  {
-  struct thread *cur = thread_current ();
-  
-  /* L: Check if still donating */
-  if (cur->priority > cur->priority_old)
-        {
-          yield = true;
-          cur->priority = cur->priority_old;
-        }
-  
-  if (cur->priority > cur->priority_old)
-  {
-    yield = true;
-    cur->priority = cur->priority_old;
-  }
-  /* L: If 0/1 is waiting, there is no need to store it in lock_list
-   * we free the memory. */
-  if (list_size (&lock->semaphore.waiters) <=1) 
-   { 
-     struct list_elem *e;
-     struct lock_elem *l;
-     for (e = list_begin (&lock_list); e != list_end (&lock_list);
-          e = list_next (e))
-      {
-        l = list_entry (e, struct lock_elem, elem);
-        if (lock->lid == l->lid)
-         {
-           list_remove (e);
-           free (l);
-           break;
-         }
-      }
-   }
-  }
-
-  sema_up (&lock->semaphore);
-
-  if (yield)
+idle (void *idle_started_ UNUSED) 
 {
   struct semaphore *idle_started = idle_started_;
   idle_thread = thread_current ();
@@ -721,7 +670,6 @@ has_higher_pri(int pri)
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
 /*Priority Donation.... 
-https://code.google.com/p/pintosof4p/source/browse/trunk/pintos/src/threads/thread.c?r=11
 
 Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure...
 
