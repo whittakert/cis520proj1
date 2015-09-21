@@ -358,12 +358,13 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) /*priority scheduling.... tw 9.16.15*/
 {
-  thread_current ()->priority = new_priority;
-
   if(has_higher_pri(new_priority))
   {
+    thread_current ()->priority = new_priority;
     thread_yield();
   }
+  else
+    thread_current ()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */

@@ -414,7 +414,58 @@ thread_get_recent_cpu (void)
    ready list.  It is returned by next_thread_to_run() as a
    special case when the ready list is empty. */
 static void
-idle (void *idle_started_ UNUSED) 
+idle (void *idle_started_ UNUSED) lock_release (struct lock *lock) 
+{
+  ASSERT (lock != NULL);
+  ASSERT (lock_held_by_current_thread (lock));
+  
+  /* L: We turn the intr off just like we do it in the acquire. */
+  enum intr_level old_level = intr_disable ();
+  /* L: If priority becomes low, there's possible need a thread_yield() */
+  bool yield = false;
+  
+  lock->holder = NULL;
+
+  /* L: We don't handle 'system' locks here (lid = -1) */
+  if(lock->lid != -1)
+  {
+  struct thread *cur = thread_current ();
+  
+  /* L: Check if still donating */
+  if (cur->priority > cur->priority_old)
+        {
+          yield = true;
+          cur->priority = cur->priority_old;
+        }
+  
+  if (cur->priority > cur->priority_old)
+  {
+    yield = true;
+    cur->priority = cur->priority_old;
+  }
+  /* L: If 0/1 is waiting, there is no need to store it in lock_list
+   * we free the memory. */
+  if (list_size (&lock->semaphore.waiters) <=1) 
+   { 
+     struct list_elem *e;
+     struct lock_elem *l;
+     for (e = list_begin (&lock_list); e != list_end (&lock_list);
+          e = list_next (e))
+      {
+        l = list_entry (e, struct lock_elem, elem);
+        if (lock->lid == l->lid)
+         {
+           list_remove (e);
+           free (l);
+           break;
+         }
+      }
+   }
+  }
+
+  sema_up (&lock->semaphore);
+
+  if (yield)
 {
   struct semaphore *idle_started = idle_started_;
   idle_thread = thread_current ();

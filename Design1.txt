@@ -66,19 +66,59 @@ Taylor Whittaker 	whittakert@ksu.edu
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+(thread.c)
+static struct semaphore sema_thread;
+
+The idea was to use sema_thread to synchronize threads without 
+dealing with priority donation.
+
 >> B2: Explain the data structure used to track priority donation.
 
+Because priority donation is only a problem with locks, we were going
+to implement a semaphore so that whenever a thread needed to wait on 
+something, it would become blocked until what it needed was available.
+So only threads with available resources would be on the ready list.
 
 ---- ALGORITHMS ----
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 
+We created the following methods in thread.c
+
+  static struct list_elem *find_pri(int pri);
+  static void push_by_pri(struct list_elem *elem, int pri);
+  static bool has_higher_pri(int pri);
+
+All threads are added to the ready list with push_by_pri so the ready
+list is always sorted, and the first element has the highest priority 
+that has been on the list for the longest time. We then simply return
+the thread at the front of the list.
+
+push_by_pri will find the first element in the ready list with a lower
+priority, and insert ELEM right before the found element. If there are 
+no elements in the ready list with a lower priority, then ELEM is 
+inserted right before the tail.
+
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
+Since the idea was to implement a semaphore, whenever a higher priority
+thread needed something a lower priority thread had, the higher priority
+thread would be blocked and thus removed from the ready list. If there
+were multiple threads with higher priority needing something that a
+low priority thread had, all of the higher priority threads would be blocked
+until the low priority thread could run until it no longer needed
+the resource.
+
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
+
+The lower priority thread calls lock_release() ((or sema_up since we
+would use a semaphore)) then the lower priority thread would yield.
+After the lower yields, the higher priority threads that were previously
+blocked would be returned to the ready list and the highest priority
+thread would then start executing.
 
 ---- SYNCHRONIZATION ----
 
@@ -86,11 +126,22 @@ Taylor Whittaker 	whittakert@ksu.edu
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
+A potential race in setting the priority can come from taking too long
+to yield after lowering priority. Our implementation avoids this by
+checking if we will need to yield before actually changing the priority.
+
+A lock would not help this race because the thread should immediately
+yield so another can run.
+
 ---- RATIONALE ----
 
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
+We chose this design because we thought it would be simple to implement and
+using a semaphore would avoid confusion of priority donation. It is superior
+to our other considered designs because it passed more tests and proved
+to provide better functionality than other attempted designs.
 
               ADVANCED SCHEDULER [EXTRA CREDIT]
               =================================
