@@ -71,12 +71,9 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
-static struct list_elem *find_pri(int pri);
-static void push_by_pri(struct list_elem *elem, int pri);
-static bool has_higher_pri(int pri);
-
-/* Compare function used to sort ready list by priority */
 static bool compare_priority(const struct list_elem*, const struct list_elem*, void*);
+static struct list_elem *find_pri(int pri);
+static bool has_higher_pri(int pri);
 
 static struct semaphore sema_thread;
 
@@ -626,27 +623,7 @@ find_pri(int pri)
   return list_tail(&ready_list);
 }
 
-/* Pushes ELEM to ready_list depending upon priority. */
-static void
-push_by_pri(struct list_elem *elem, int pri)
-{
-  int i;
-  struct list_elem *le = list_tail(&ready_list);
-
-  //loop through priorities searching for the first element of lower priority
-  for(i = pri - 1; i > 0; i--)
-  {
-    le = find_pri(i);
-
-    if(le != list_tail(&ready_list))
-    {
-      break;
-    }
-  }
-
-  list_insert (le, elem);
-}
-
+/* Compare function used to sort ready list by priority */
 static bool
 compare_priority(const struct list_elem *lin, const struct list_elem *lhead, void *unused)
 {
