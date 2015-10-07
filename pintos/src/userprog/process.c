@@ -37,7 +37,20 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+  
+  //added probably wrong :) 
+  int i = 0; //to iterate through file name
+  char *token = " "; // our token
+  char *lastchar; //unique to strtok_r
+  char **args = calloc((strlen(fn_copy) / 2) + 1, sizeof( char * )); //allowcates memory for a list of pointers to arguments???
 
+  for (args[i] = strtok_r(fn_copy, token, &lastchar); i < MAXARGS; args[i++] = strtok_r(NULL, token, &last))
+	{
+		char *temp = calloc (strlen(args[i], sizeof(char)); //create temp, allocate memory for that first process or argument name
+		strlcpy (temp, args[i], strlen (args[i]) + 1);
+      		args[i] = temp;
+	}
+  // stopped adding here
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -98,6 +111,8 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  //print the exit message here????? 
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;

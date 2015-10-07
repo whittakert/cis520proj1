@@ -8,4 +8,7 @@ int process_wait (tid_t);
 void process_exit (void);
 void process_activate (void);
 
+// max number of arguments that can be sent to a program
+#define MAXARGS 50 
+
 #endif /* userprog/process.h */
