@@ -112,8 +112,13 @@ process_exit (void)
   uint32_t *pd;
   
   //print the exit message here????? 
-  printf ("%s: exit(%d)\n", );
+  /*
+  tid_t temp = cur ->tid;
+  not sure what exit code is
+  printf ("%s: exit(%d)\n", temp, );
 
+  */
+  
 
 
 
