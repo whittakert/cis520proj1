@@ -104,7 +104,27 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  while(1);
+  //while(1);
+
+  struct thread *temp; // current thread 
+  temp = get_thread_by_tid(child_tid); // finds thread
+  //can compare the child thread against the current thread
+  struct thread *cur;
+  cur = thread_current()
+  
+
+  /* need to add a return status in thread!! also need to modify parent/child semaphores??
+	Returns -1 if... 
+	1. child is invalid (== NULL) 
+	2. child is not a child of the current process
+	3. of if the child has already called wait
+  */
+  if (temp == NULL || temp->parent != cur || t->waited)
+	return -1;
+
+  else if (t->ret_status != -1 || t->exited == true)
+	return -1;
+  temp->ret_status = -1;
 }
 
 /* Free the current process's resources. */
@@ -114,6 +134,10 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  //print the exit message here, need a return status. 
+
+  printf ("%s: exit(%d)\n", cur->name, cur->ret_status );
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
