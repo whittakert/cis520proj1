@@ -71,12 +71,6 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
-static bool compare_priority(const struct list_elem*, const struct list_elem*, void*);
-static struct list_elem *find_pri(int pri);
-static bool has_higher_pri(int pri);
-
-static struct semaphore sema_thread;
-
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -98,7 +92,6 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
-  sema_init (&sema_thread, 0);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -216,12 +209,6 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
-  /* If the new thread has a higher priority than the current one */
-  if(has_higher_pri(running_thread()->priority))
-  {
-    thread_yield();
-  }
-
   return tid;
 }
 
@@ -258,9 +245,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  //push_by_pri (&t->elem, t->priority);
-  list_insert_ordered( &ready_list, &t->elem, compare_priority, NULL );
-
+  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -331,10 +316,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-  {   
-    //push_by_pri(&cur->elem, cur->priority);
-    list_insert_ordered( &ready_list, &thread_current()->elem, compare_priority, NULL );
-  }
+    list_push_back (&ready_list, &cur->elem);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -359,10 +341,9 @@ thread_foreach (thread_action_func *func, void *aux)
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
-thread_set_priority (int new_priority)
+thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
-  thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -487,7 +468,6 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
-  t->wake_time = 0;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 }
@@ -601,107 +581,7 @@ allocate_tid (void)
 
   return tid;
 }
-
-/* Gets the first element of the specified priority from the
-   ready list. If there is no element with that priority, the 
-   tail will be returned. */
-static struct list_elem *
-find_pri(int pri)
-{
-  struct list_elem *e;
-
-      for (e = list_begin (&ready_list); e != list_end (&ready_list);
-           e = list_next (e))
-        {
-          struct thread *f = list_entry (e, struct thread, elem);
-          if(f->priority == pri)
-	  {
-	    return e;
-	  }
-        }
-
-  return list_tail(&ready_list);
-}
-
-/* Compare function used to sort ready list by priority */
-static bool
-compare_priority(const struct list_elem *lin, const struct list_elem *lhead, void *unused)
-{
-  struct thread *in = list_entry(lin, struct thread, elem);
-  struct thread *head = list_entry(lhead, struct thread, elem);
-  return ( in->priority > head->priority );
-}
-
-/* Determines if there is a higher priority in ready_list. */
-static bool
-has_higher_pri(int pri)
-{
-  int i;
-  bool val = false;
-
-  for(i = pri + 1; i <= PRI_MAX; i++)
-  {
-    if(find_pri(i) != list_tail(&ready_list))
-    {
-      val = true;
-    }
-  }
-
-  return val;
-}
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
-
-/*Priority Donation.... 
-
-Think we need a check to see if donation is necessary.. has_higher_pri bool may be sufficient??? not sure...
-
-bool need_donate(void)
-{
-	struct list_elem *element;
-	for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
-           element = list_prev (element))
-	{
-		struck lock_elem *lock_element = add element to lock_elem;
-		if lock_element ->lock->holder == null, continue;
-		if sema wait list == null, continue;
-		create max_element  = sort wait list back to front
-		create thread max_waiter, add to list
-		if max_waiter == null, break;
-		if holder->priority < max_waiter -> priority
-			return true;
-	}
-	return false;
-}
-
-
-Find the max priority in the waiting list and donate it to the thread holding the lock
-need to make list of threads waiting for the lock -- lock_list in my psuedocode/
-
-1. sort list
-2. create list_elem *element
-3. for (element = list_rbegin (&lock_list); element != list_rend (&lock_list); // for loop example in lib/kernel/list
-           element = list_prev (element))
-	{
-		struck lock_elem *lock_element = add element to lock_elem;
-		create thread holder = lock_element->lock->holder;
-		if holder == null, break;
-		create max_element  = sort wait list back to front
-		create thread max_waiter, add to list
-		if max_waiter == null, break;
-		if holder->priority < max_waiter -> priority
-			holder->priority = max_waiter -> priority;
-	}
-
-
-
-void donate(void)
-{
-
-
-}
-
-*/
-

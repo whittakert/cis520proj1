@@ -28,7 +28,6 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  printf("\nstart of execute..\n\n");
   char *fn_copy;
   char *copy2;
   tid_t tid;
