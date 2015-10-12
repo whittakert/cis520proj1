@@ -97,13 +97,13 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     //TAYLOR ADDED
-    struct semaphore semaWait;		/* Sema for wait  */
-    struct semaphore semaExit;          /* Sema for exit  */
-    struct thread *parent; 		/* The parent of the thread  */
-    struct list children;		/* A list for the children?? */
-    int ret_status;			/* Return status for process wait and exit */
-    bool waited;			/* check to see if thread has exited */
-    bool exited;			/* check to see if thread has called wait */
+    //struct semaphore semaWait;		/* Sema for wait  */
+    //struct semaphore semaExit;          /* Sema for exit  */
+    //struct thread *parent; 		/* The parent of the thread  */
+    //struct list children;		/* A list for the children?? */
+    //int ret_status;			/* Return status for process wait and exit */
+    //bool waited;			/* check to see if thread has exited */
+    //bool exited;			/* check to see if thread has called wait */
 #endif
 
     /* Owned by thread.c. */

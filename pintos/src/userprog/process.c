@@ -32,6 +32,10 @@ process_execute (const char *file_name)
   char *copy2;
   tid_t tid;
 
+  char *delim = " ";
+  char *save_ptr;
+  char *fileName;
+
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
@@ -44,10 +48,6 @@ process_execute (const char *file_name)
   if (copy2 == NULL)
     return TID_ERROR;
   strlcpy (copy2, file_name, PGSIZE);
-
-  char *delim = " ";
-  char *save_ptr;
-  char *fileName;
 
   //Separate the filename
   fileName = strtok_r(copy2, delim, &save_ptr);
@@ -104,9 +104,9 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  //while(1);
+  while(1);
 
-  struct thread *temp; // current thread 
+  /*struct thread *temp; // current thread 
   temp = get_thread_by_tid(child_tid); // finds thread
   //can compare the child thread against the current thread
   struct thread *cur;
@@ -119,12 +119,12 @@ process_wait (tid_t child_tid UNUSED)
 	2. child is not a child of the current process
 	3. of if the child has already called wait
   */
-  if (temp == NULL || temp->parent != cur || t->waited)
+  /*if (temp == NULL || temp->parent != cur || t->waited)
 	return -1;
 
   else if (t->ret_status != -1 || t->exited == true)
 	return -1;
-  temp->ret_status = -1;
+  temp->ret_status = -1;*/
 }
 
 /* Free the current process's resources. */
@@ -136,7 +136,7 @@ process_exit (void)
 
   //print the exit message here, need a return status. 
 
-  printf ("%s: exit(%d)\n", cur->name, cur->ret_status );
+  //printf ("%s: exit(%d)\n", cur->name, cur->ret_status );
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -483,6 +483,13 @@ setup_stack (void **esp, char *file_name)
   uint8_t *kpage;
   bool success = false;
 
+  int i = 0;
+  size_t argc = 0;
+  char *delim = " ";
+  char *token;
+  char *save_ptr;
+  char **argv;
+
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
@@ -500,12 +507,6 @@ setup_stack (void **esp, char *file_name)
      the file_name. */
 
   /* First we need to separate the words. */
-  int i = 0;
-  size_t argc = 0;
-  char *delim = " ";
-  char *token;
-  char *save_ptr;
-  char **argv;
 
   for(i = 0; file_name[i] != '\0'; i++) //loop through the filename to find the number of arguments
   {
@@ -548,7 +549,6 @@ setup_stack (void **esp, char *file_name)
   memcpy(*esp, &argv[argc], sizeof(void *));
 
   free(argv); //Release the memory we allocated above
-
   return success;
 }
 
