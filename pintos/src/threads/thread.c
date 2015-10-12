@@ -208,6 +208,14 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+  
+    //TAYLOR ADDED
+  sema_init(t->semaWait, 0);
+  sema_init(t->semaExit, 0);
+  t->ret_status = -1; 
+  t->parent = thread_current();
+  t->exited = false;
+  t->wait = false;
 
   return tid;
 }
