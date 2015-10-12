@@ -328,8 +328,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
-printf("\nfile_name = %s\n\n", (char*)file_name); //TODO: Remove this
-
   /* Set up stack. */
   if (!setup_stack (esp, (char*)file_name))
     goto done;
@@ -481,6 +479,7 @@ setup_stack (void **esp, char *file_name)
   int i = 0;
   size_t argc = 0;
   char *delim = " ";
+  char *token;
   char *save_ptr;
   char **argv;
 
@@ -492,17 +491,17 @@ setup_stack (void **esp, char *file_name)
 
   argc++; //Add the filename to the argument count
 
-printf("argc = %d\n\n", (int)argc); //TODO: Remove
-
   argv = (char**)calloc(argc + 1, sizeof(char*)); //Allocate empty space for each argument plus a sentinel
 
-  for(i = 0; i < (int)argc; i++) //for each argument in file_name (including the name of the file)
+  i = 0;
+  for(token = strtok_r(file_name, delim, &save_ptr); token != NULL;
+      token = strtok_r(NULL, delim, &save_ptr)) //for each argument in file_name (including the name of the file)
   {
-    char *temp = strtok_r(file_name, delim, &save_ptr); //get the token
-
-    *esp -= strlen(temp) + 1; //Move the stack pointer down by this argument
+    *esp -= strlen(token) + 1; //Move the stack pointer down by this argument
     argv[i] = *esp; //Set the address of the word to be the same as the stack pointer position
-    memcpy(*esp, temp, strlen(temp) + 1); //Copy the value from temp to the stack
+    memcpy(*esp, token, strlen(token) + 1); //Copy the value from temp to the stack
+
+    i++;
   }
 
   argv[argc] = 0; //sentinel
