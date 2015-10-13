@@ -23,8 +23,8 @@ Ethan Koch
 
 			   ARGUMENT PASSING
 			   ================
-
-	---- DATA STRUCTURES ----
+			
+			---- DATA STRUCTURES ----
 
 >> A1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
@@ -48,16 +48,21 @@ Ethan Koch
 We added a maximum number of arguments that can be passed.
 This constraint will help us to avoid overflowing the stack.
 
-
-	---- ALGORITHMS ----
+			---- ALGORITHMS ----
 
 >> A2: Briefly describe how you implemented argument parsing.  How do
 >> you arrange for the elements of argv[] to be in the right order?
->> How do you avoid overflowing the stack page?
+>> How do you avoid overflowing the stack page? 
+   1. In the load function, we copy the file name to parse it later
+   2. In setup_stack we look through the filename to find the number of arguments
+   3. then we allocate space for each argument + sentinel
+   4. we used a for loop to add the arguments to the stack in reverse order
+   5. we then add the argv and argument count to the stack
+   6. release memory.
 
 
 
-	---- RATIONALE ----
+			---- RATIONALE ----
 
 >> A3: Why does Pintos implement strtok_r() but not strtok()? - tw 10.6
 
@@ -86,7 +91,7 @@ This constraint will help us to avoid overflowing the stack.
 			     SYSTEM CALLS
 			     ============
 
----- DATA STRUCTURES ----
+			---- DATA STRUCTURES ----
 
 >> B1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
@@ -96,7 +101,7 @@ This constraint will help us to avoid overflowing the stack.
 >> Are file descriptors unique within the entire OS or just within a
 >> single process?
 
----- ALGORITHMS ----
+			---- ALGORITHMS ----
 
 >> B3: Describe your code for reading and writing user data from the
 >> kernel.
@@ -125,7 +130,7 @@ This constraint will help us to avoid overflowing the stack.
 >> paragraphs, describe the strategy or strategies you adopted for
 >> managing these issues.  Give an example.
 
----- SYNCHRONIZATION ----
+			---- SYNCHRONIZATION ----
 
 >> B7: The "exec" system call returns -1 if loading the new executable
 >> fails, so it cannot return before the new executable has completed
@@ -139,7 +144,7 @@ This constraint will help us to avoid overflowing the stack.
 >> terminates without waiting, before C exits?  After C exits?  Are
 >> there any special cases?
 
----- RATIONALE ----
+			---- RATIONALE ----
 
 >> B9: Why did you choose to implement access to user memory from the
 >> kernel in the way that you did?
