@@ -32,23 +32,14 @@ Ethan Koch
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
-	#ifndef USERPROG_PROCESS_H
-	#define USERPROG_PROCESS_H
-
-	#include "threads/thread.h"
-
-	tid_t process_execute (const char *file_name);
-	int process_wait (tid_t);
-	void process_exit (void);
-	void process_activate (void);
+  process.h
 
 	// max number of arguments that can be sent to a program
 	#define MAXARGS 50 					<-- added
 
-	#endif /* userprog/process.h */
 
-We added a maximum number of arguments that can be passed.
-This constraint will help us to avoid overflowing the stack.
+  We added a maximum number of arguments that can be passed.
+  This constraint will help us to avoid overflowing the stack.
 
 			---- ALGORITHMS ----
 
