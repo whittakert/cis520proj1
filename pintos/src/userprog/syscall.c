@@ -104,7 +104,7 @@ exit (int status)
 	lock_acquire (&syscall_lock);
 	thread_exit();
 	process_exit();
-  lock_release (&syscall_lock);
+  	lock_release (&syscall_lock);
 }
 
 /* Start another process. */
@@ -114,7 +114,7 @@ exec (const char *cmd_line)
 	tid_t tid;
 	lock_acquire (&syscall_lock);
 	tid = process_execute (cmd_line);
-  lock_release (&syscall_lock);
+  	lock_release (&syscall_lock);
 	return (pid_t)tid;
 }
 
@@ -122,20 +122,27 @@ exec (const char *cmd_line)
 int 
 wait (pid_t pid)
 {
-	lock_acquire (&syscall_lock);
+	//lock_acquire (&syscall_lock);
 	//suspend parents and wait for child to finish
-  lock_release (&syscall_lock);
-	return 0;
+  	//lock_release (&syscall_lock);
+	//return 0;
+	int temp;
+	lock_acquire (&syscall_lock);
+	temp = process_wait(pid);
+	lock_release (&syscall_lock);
+	return temp;
 }
 
 /* Create a file. */
 bool 
 create (const char *file, unsigned initial_size)
 {
+	if (file == NULL)
+		sys_exit(-1); //TW 10.12	
 	bool success;
 	lock_acquire (&syscall_lock);
-  success = filesys_create(file, initial_size);
-  lock_release (&syscall_lock);
+  	success = filesys_create(file, initial_size);
+  	lock_release (&syscall_lock);
 	return success;
 }
 
@@ -143,10 +150,12 @@ create (const char *file, unsigned initial_size)
 bool 
 remove (const char *file)
 {
+	if (file == NULL)
+		sys_exit(-1); //TW 10.12
 	bool success;
 	lock_acquire (&syscall_lock);
-  success = filesys_remove(file);
-  lock_release (&syscall_lock);
+  	success = filesys_remove(file);
+  	lock_release (&syscall_lock);
 	return success;
 }
 
@@ -156,8 +165,8 @@ open (const char *file)
 {
 	int rtn;
 	lock_acquire (&syscall_lock);
-  rtn = filesys_open(file);
-  lock_release (&syscall_lock);
+  	rtn = filesys_open(file);
+  	lock_release (&syscall_lock);
 	return rtn;
 }
 
@@ -167,8 +176,8 @@ filesize (int fd)
 {
 	int size;
 	lock_acquire (&syscall_lock);
-  size = file_length(fd);
-  lock_release (&syscall_lock);
+  	size = file_length(fd);
+  	lock_release (&syscall_lock);
 	return size;
 }
 
@@ -178,8 +187,8 @@ read (int fd, void *buffer, unsigned size)
 {
 	int bytesread;
 	lock_acquire (&syscall_lock);
-  bytesread = (int)file_read(fd, buffer, size);
-  lock_release (&syscall_lock);
+  	bytesread = (int)file_read(fd, buffer, size);
+  	lock_release (&syscall_lock);
 	return bytesread;
 }
 
@@ -189,8 +198,8 @@ write (int fd, const void *buffer, unsigned size)
 {
 	int byteswritten;
 	lock_acquire (&syscall_lock);
-  byteswritten = (int)file_write(fd, buffer, size);
-  lock_release (&syscall_lock);
+  	byteswritten = (int)file_write(fd, buffer, size);
+  	lock_release (&syscall_lock);
 	return byteswritten;
 }
 
@@ -198,19 +207,23 @@ write (int fd, const void *buffer, unsigned size)
 void 
 seek (int fd, unsigned position)
 {
+	if (fd == NULL)
+		sys_exit(-1); //TW 10.12
 	lock_acquire (&syscall_lock);
-  file_seek(fd, position);
-  lock_release (&syscall_lock);
+  	file_seek(fd, position);
+  	lock_release (&syscall_lock);
 }
 
 /* Report current position in a file. */
 unsigned 
 tell (int fd)
 {
+	if (fd == NULL)
+		sys_exit(-1); //TW 10.12	
 	unsigned pos;
 	lock_acquire (&syscall_lock);
-  pos = (unsigned)file_tell(fd);
-  lock_release (&syscall_lock);
+  	pos = (unsigned)file_tell(fd);
+  	lock_release (&syscall_lock);
 	return pos;
 }
 
@@ -218,8 +231,11 @@ tell (int fd)
 void 
 close (int fd)
 {
+	if (fd == NULL)
+		sys_exit(-1);//TW 10.12 
 	lock_acquire (&syscall_lock);
-  file_close(fd);
-  lock_release (&syscall_lock);
+  	file_close(fd);
+	free(fd);
+  	lock_release (&syscall_lock);
 }
 

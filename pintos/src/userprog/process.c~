@@ -106,25 +106,36 @@ process_wait (tid_t child_tid UNUSED)
 {
   while(1);
 
-  /*struct thread *temp; // current thread 
+/*
+  struct thread *temp; // current thread 
   temp = get_thread_by_tid(child_tid); // finds thread
   //can compare the child thread against the current thread
   struct thread *cur;
   cur = thread_current()
-  
+  int ret;
 
-  /* need to add a return status in thread!! also need to modify parent/child semaphores??
+/*
+  Need to add a return status in thread!! also need to modify parent/child semaphores??
 	Returns -1 if... 
 	1. child is invalid (== NULL) 
 	2. child is not a child of the current process
-	3. of if the child has already called wait
-  */
-  /*if (temp == NULL || temp->parent != cur || t->waited)
+	3. of if the child has already called wait 
+*/
+/*
+  if (temp == NULL || temp->parent != cur || t->waited)
 	return -1;
 
   else if (t->ret_status != -1 || t->exited == true)
 	return -1;
-  temp->ret_status = -1;*/
+
+  sema_down(&t->sema_wait); //decrease, one less is waiting
+  int ret = -1;
+  sema_up(&t->sema_exit); // increase, one more has exited
+  t->waited = true;
+
+  return ret;
+
+*/
 }
 
 /* Free the current process's resources. */
@@ -515,7 +526,7 @@ setup_stack (void **esp, char *file_name)
   }
 
   argc++; //Add the filename to the argument count
-printf("PHYS_BASE = %#010x\n", PHYS_BASE); //TODO: REMOVE
+
   argv = (char**)calloc(argc + 1, sizeof(char*)); //Allocate empty space for each argument plus a sentinel
 
   i = 0;
@@ -527,17 +538,11 @@ printf("PHYS_BASE = %#010x\n", PHYS_BASE); //TODO: REMOVE
     memcpy(*esp, token, strlen(token) + 1); //Copy the value from temp to the stack
 
     i++;
-printf("token %d = %s\n*esp = %#010x\n", i, token, *esp); //TODO: remove
   }
 
   argv[argc] = 0; //sentinel
-
-i = (size_t) *esp % 4;
-if(i)
-{
-  *esp -= i;//sizeof(char*); //move the stack pointer down
-  memcpy(*esp, &argv[argc], i);//sizeof(char*));
-}
+  *esp -= sizeof(char*); //move the stack pointer down
+  memcpy(*esp, &argv[argc], sizeof(char*));
 
   for(i = argc - 1; i >= 0; i--) //for each argument in reverse order
   {
@@ -554,10 +559,7 @@ if(i)
   *esp -= sizeof(void *);
   memcpy(*esp, &argv[argc], sizeof(void *));
 
-printf("return val *esp = %#010x\n", *esp); //TODO: REMOVE
-
   free(argv); //Release the memory we allocated above
-printf("FINISHED SETUP_STACK\n\n"); //TODO: remove
   return success;
 }
 
