@@ -9,6 +9,7 @@
 #include "filesys/filesys.h"
 #include "filesys/file.h"
 #include "process.h"
+#include "threads/vaddr.h"
 
 static struct lock syscall_lock;
 static void syscall_handler (struct intr_frame *);
@@ -104,7 +105,7 @@ exit (int status)
 	lock_acquire (&syscall_lock);
 	thread_exit();
 	process_exit();
-  	lock_release (&syscall_lock);
+	lock_release (&syscall_lock);
 }
 
 /* Start another process. */
@@ -114,7 +115,7 @@ exec (const char *cmd_line)
 	tid_t tid;
 	lock_acquire (&syscall_lock);
 	tid = process_execute (cmd_line);
-  	lock_release (&syscall_lock);
+	lock_release (&syscall_lock);
 	return (pid_t)tid;
 }
 
@@ -137,26 +138,26 @@ wait (pid_t pid)
 bool 
 create (const char *file, unsigned initial_size)
 {
+	bool created;
 	if (file == NULL)
-		sys_exit(-1); //TW 10.12	
-	bool success;
+		exit(-1); //TW 10.12	
 	lock_acquire (&syscall_lock);
-  	success = filesys_create(file, initial_size);
-  	lock_release (&syscall_lock);
-	return success;
+  created = filesys_create(file, (off_t)initial_size);
+  lock_release (&syscall_lock);
+	return created;
 }
 
 /* Delete a file. */
 bool 
 remove (const char *file)
 {
+	bool removed;
 	if (file == NULL)
-		sys_exit(-1); //TW 10.12
-	bool success;
+		exit(-1); //TW 10.12
 	lock_acquire (&syscall_lock);
-  	success = filesys_remove(file);
-  	lock_release (&syscall_lock);
-	return success;
+  removed = filesys_remove(file);
+  lock_release (&syscall_lock);
+	return removed;
 }
 
 /* Open a file. */
@@ -165,8 +166,8 @@ open (const char *file)
 {
 	int rtn;
 	lock_acquire (&syscall_lock);
-  	rtn = filesys_open(file);
-  	lock_release (&syscall_lock);
+	rtn = filesys_open(file);
+	lock_release (&syscall_lock);
 	return rtn;
 }
 
@@ -176,8 +177,8 @@ filesize (int fd)
 {
 	int size;
 	lock_acquire (&syscall_lock);
-  	size = file_length(fd);
-  	lock_release (&syscall_lock);
+	size = file_length(fd);
+	lock_release (&syscall_lock);
 	return size;
 }
 
@@ -185,22 +186,22 @@ filesize (int fd)
 int 
 read (int fd, void *buffer, unsigned size)
 {
-	int bytesread;
+	int bytes_read;
 	lock_acquire (&syscall_lock);
-  	bytesread = (int)file_read(fd, buffer, size);
-  	lock_release (&syscall_lock);
-	return bytesread;
+	bytes_read = (int)file_read(fd, buffer, size);
+	lock_release (&syscall_lock);
+	return bytes_read;
 }
 
 /* Write to a file. */
 int 
 write (int fd, const void *buffer, unsigned size)
 {
-	int byteswritten;
+	int bytes_written;
 	lock_acquire (&syscall_lock);
-  	byteswritten = (int)file_write(fd, buffer, size);
-  	lock_release (&syscall_lock);
-	return byteswritten;
+	bytes_written = (int)file_write(fd, buffer, size);
+	lock_release (&syscall_lock);
+	return bytes_written;
 }
 
 /* Change position in a file. */
@@ -208,10 +209,10 @@ void
 seek (int fd, unsigned position)
 {
 	if (fd == NULL)
-		sys_exit(-1); //TW 10.12
+		exit(-1); //TW 10.12
 	lock_acquire (&syscall_lock);
-  	file_seek(fd, position);
-  	lock_release (&syscall_lock);
+	file_seek(fd, position);
+	lock_release (&syscall_lock);
 }
 
 /* Report current position in a file. */
@@ -219,11 +220,11 @@ unsigned
 tell (int fd)
 {
 	if (fd == NULL)
-		sys_exit(-1); //TW 10.12	
+		exit(-1); //TW 10.12	
 	unsigned pos;
 	lock_acquire (&syscall_lock);
-  	pos = (unsigned)file_tell(fd);
-  	lock_release (&syscall_lock);
+	pos = (unsigned)file_tell(fd);
+	lock_release (&syscall_lock);
 	return pos;
 }
 
@@ -232,10 +233,10 @@ void
 close (int fd)
 {
 	if (fd == NULL)
-		sys_exit(-1);//TW 10.12 
+		exit(-1);//TW 10.12 
 	lock_acquire (&syscall_lock);
-  	file_close(fd);
-	free(fd);
-  	lock_release (&syscall_lock);
+	file_close(fd);
+	//free(fd); freeing file is handled in file_close
+	lock_release (&syscall_lock);
 }
 
