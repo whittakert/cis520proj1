@@ -116,6 +116,15 @@ This constraint will help us to avoid overflowing the stack.
 >> B5: Briefly describe your implementation of the "wait" system call
 >> and how it interacts with process termination.
 
+   1. Create a temporary thread based on the child TID passed into the function
+   2. We return -1 if... 
+	i. child is invalid (== NULL) 
+	ii. child is not a child of the current process
+	iii. of if the child has already called wait 
+   3. we decrease our waiting semaphore
+   4. we increase the exit semaphore
+   5. we set the temp thread waited to true
+
 >> B6: Any access to user program memory at a user-specified address
 >> can fail due to a bad pointer value.  Such accesses must cause the
 >> process to be terminated.  System calls are fraught with such
